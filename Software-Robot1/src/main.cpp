@@ -11,6 +11,8 @@
 #include <math.h>
 #include "odometry.h"
 #include "path_planning.h"
+#include "main.h"
+#include "conveyorbelt.h"
 
 using namespace vex;
 
@@ -23,19 +25,16 @@ using namespace vex;
 
 
 
-// Global Constants
-// Make sure to define a motor with the right gear ratio (motor gear color)
-const gearSetting RED_GEAR = ratio36_1; // 100 RPM - high torque & low speed (e.g. lifting arms & moving claws,)
-const gearSetting GREEN_GEAR = ratio18_1; // 200 RPM - standard gear ratio for drivetrain applications 
-const gearSetting BLUE_GEAR = ratio6_1; // 600 RPM - low torque & high speed (e.g.  intake rollers & flywheels))
 
 // A global instance of vex::brain
-vex::brain Brain;
+//vex::brain Brain;
 
 // Global instance of competition
 competition compete;
 // Global instance of controller
-controller primary_controller = controller(primary);
+//controller primary_controller = controller(primary);
+
+ConveyorBelt belt = ConveyorBelt();
 
 // define your global instances of motors and other devices here
 motor left_motor_front = motor(PORT17, BLUE_GEAR, false);
@@ -49,7 +48,6 @@ motor right_motor_back = motor(PORT9, BLUE_GEAR, true);
 motor_group right_motor_group = motor_group(right_motor_front, right_motor_mid, right_motor_back);
 
 motor intake_motor = motor(PORT18, GREEN_GEAR, false);
-motor belt_motor = motor(PORT16, BLUE_GEAR, false);
 
 digital_out Actuator = digital_out(Brain.ThreeWirePort.H);
 
@@ -66,87 +64,18 @@ ThreeWheelLocalizer localizer = ThreeWheelLocalizer(
     offset_encoder);
 
 // Global Variables
-volatile bool belt_toggle_state = false;
-volatile bool color_detected = true; // TODO: Set up control to vision sensor
-volatile bool reverse_belt = false;
+//volatile bool color_detected = true; // TODO: Set up control to vision sensor
 
 void intake_toggle(void){
     std::cout<<"Intake Toggle"<<std::endl;
 }
 
 void belt_toggle_on(void){
-    std::cout<<"Belt Toggle On"<<std::endl;
-    belt_toggle_state = true;
-
+    belt.belt_toggle_on();
 }
 
 void belt_toggle_off(void){
-    std::cout<<"Belt Toggle Off"<<std::endl;
-    belt_toggle_state = false;
-}
-
-void belt_control(void){
-    while(true){
-        int belt_position = abs((((int)belt_motor.position(vex::rotationUnits::deg)) % BELT_THROW_POSITION));
-        Brain.Screen.printAt(1, 150, "Belt Position: %6d", belt_position);
-        belt_motor.position(vex::rotationUnits::deg);
-        /*
-        if(color_detected && belt_position >= -BELTRANGE/3 && belt_position <= BELTRANGE){
-            belt_motor.stop(vex::brakeType::brake);
-            std::cout<<"Ejecting Ring!"<<std::endl;
-            std::cout<<"Belt Position: "<<belt_position<<std::endl;
-
-            wait(1, sec);
-            while(belt_position >= 0 && belt_position <= BELTRANGE){
-                if(reverse_belt)
-                    belt_motor.setVelocity(-BELTSPEED, vex::percentUnits::pct);
-                else
-                    belt_motor.setVelocity(BELTSPEED, vex::percentUnits::pct);
-
-                belt_motor.spin(forward);
-                belt_position = abs((((int)belt_motor.position(vex::rotationUnits::deg)) % BELT_THROW_POSITION));
-            }
-        }
-        */
-
-       if(color_detected){
-            wait(0.15, sec); // Wait until at peak
-            std::cout<<"Ejecting Ring!"<<std::endl;
-            
-            belt_motor.stop(vex::brakeType::brake); // Briefly stop
-            wait(0.45, sec);
-            //belt_motor.setVelocity(BELTSPEED, vex::percentUnits::pct);
-            belt_motor.spin(forward);
-            wait(0.7, sec);
-
-
-            /*
-            while(belt_position >= 0 && belt_position <= BELTRANGE){
-                if(reverse_belt)
-                    belt_motor.setVelocity(-BELTSPEED, vex::percentUnits::pct);
-                else
-                    belt_motor.setVelocity(BELTSPEED, vex::percentUnits::pct);
-
-                belt_motor.spin(forward);
-                belt_position = abs((((int)belt_motor.position(vex::rotationUnits::deg)) % BELT_THROW_POSITION));
-            }
-            */
-       }
-
-        if(belt_toggle_state){
-            if(reverse_belt)
-                belt_motor.setVelocity(-BELTSPEED, vex::percentUnits::pct);
-            else
-                belt_motor.setVelocity(BELTSPEED, vex::percentUnits::pct);
-            
-            belt_motor.spin(forward);  
-        }
-        else{
-            belt_motor.stop(brake);
-        }
-
-
-    }
+    belt.belt_toggle_off();
 }
 
 // Color Sensor
@@ -380,12 +309,12 @@ int main() {
     // Set up callbacks for autonomous and driver control periods.
     compete.autonomous(autonomous);
     compete.drivercontrol(usercontrol);
-
+    
     primary_controller.ButtonR1.pressed(intake_toggle);
     primary_controller.ButtonL1.pressed(belt_toggle_on);
     primary_controller.ButtonL2.pressed(belt_toggle_off);
 
-    thread beltThread = thread(belt_control);
+    thread beltThread = thread([]{ belt.belt_control(); });
     thread visionThread = thread(vision_sensor_thread);
 
     // Run the pre-autonomous function.
