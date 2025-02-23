@@ -11,7 +11,7 @@
 #define MANUAL_OFFSET 1.3
 #define TILEREVOLUTIONS(offset) (TILEDISTANCE / (M_PI * WHEELSIZE)) + offset // Revolutions per Tile (S / (PI)*Diameter = Revolutions )
 #define TIMEOUT_TIME 2000 // Time in milliseconds to wait for a command to complete
-#define MINVOLTAGE 1
+#define MINVOLTAGE 2.5
 #define MAXVOLTAGE 8
 
 // PID Control
@@ -22,6 +22,12 @@ void rotateTo(double target);
 void driveForward(int tiles);
 
 // External declarations
+extern vex::motor left_motor_front;
+extern vex::motor left_motor_mid;
+extern vex::motor left_motor_back;
+extern vex::motor right_motor_front;
+extern vex::motor right_motor_mid;
+extern vex::motor right_motor_back;
 extern vex::motor_group left_motor_group;
 extern vex::motor_group right_motor_group;
 extern vex::brain Brain;
