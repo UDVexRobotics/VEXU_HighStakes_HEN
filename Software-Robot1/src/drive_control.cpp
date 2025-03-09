@@ -3,7 +3,7 @@
 void dual_stick_drive(void){
 
     // Controls for Up-Down and Left-Right movement
-    float leftStick = (float)(primary_controller.Axis3.position() / 100.0);             // Vertical Movement
+    float leftStick = -(float)(primary_controller.Axis3.position() / 100.0);             // Vertical Movement
     float rightStick = primary_controller.Axis1.position() / (float)-100.0;            // Horizontal Movement
    
     
@@ -34,7 +34,7 @@ void dual_stick_drive(void){
 
 void tank_drive(void){
     // Controls for Up-Down and Left-Right movement
-    float rightStick = (primary_controller.Axis3.position() / (float)100.0);             // Vertical Movement
+    float rightStick = -(primary_controller.Axis3.position() / (float)100.0);             // Vertical Movement
     float leftStick = (primary_controller.Axis2.position() / (float)100.0);            // Horizontal Movement
    
     // Motor speed percentage based on cubed function

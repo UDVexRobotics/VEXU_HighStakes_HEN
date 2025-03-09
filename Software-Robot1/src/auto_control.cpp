@@ -5,7 +5,6 @@ double PIDControl(double target, double position){
     return (target - position) * KP;
 }
 
-
 void rotateTo(double target) {
     bool is_negative = (target < 0); // Check if the target is negative (counter-clockwise vs clockwise)
     target = fabs(target);
@@ -24,7 +23,7 @@ void rotateTo(double target) {
         double right_pos = fabs(right_motor_group.position(vex::degrees));
         avg_pos = (left_pos + right_pos) / 2.0;
         double drive = PIDControl(target, avg_pos);
-        std::cout<<"Avg: "<<avg_pos<<" target: "<<target<<" drive: "<<drive<<std::endl;
+        //std::cout<<"Avg: "<<avg_pos<<" target: "<<target<<" drive: "<<drive<<std::endl;
 
         // Clamp voltage to min and max 
         drive = (drive < MINVOLTAGE && drive > 0) ? MINVOLTAGE : drive; // Don't allow drive to go below minimum voltage (+speed)
@@ -48,7 +47,7 @@ void rotateTo(double target) {
             left_motor_group.spin(vex::forward, -left_drive, vex::voltageUnits::volt); // Reversed
             right_motor_group.spin(vex::forward, right_drive, vex::voltageUnits::volt);
         }else {
-            std::cout<<"Left: "<<left_drive<<" Right: "<<right_drive<<std::endl;
+            // std::cout<<"Left: "<<left_drive<<" Right: "<<right_drive<<std::endl;
             left_motor_group.spin(vex::forward, left_drive, vex::voltageUnits::volt);
             right_motor_group.spin(vex::forward, -right_drive, vex::voltageUnits::volt); // Reversed
         }
@@ -56,16 +55,16 @@ void rotateTo(double target) {
         uint32_t elapsed_time = Brain.Timer.time() - start_time;
         if (elapsed_time > TIMEOUT_TIME) {
             std::cout<<"Timeout"<<std::endl;
-            //break;
+            break;
         }
     }
-    std::cout<<"Done"<<std::endl;
+    //std::cout<<"Done"<<std::endl;
     left_motor_group.stop(vex::brakeType::brake);
     right_motor_group.stop(vex::brakeType::brake);
 }
 
-void driveForward(int tiles){
-    int t = (int)(tiles * (TILEREVOLUTIONS(MANUAL_OFFSET)) * 360.0); // Convert tiles to degrees
+void driveForward(float tiles){
+    float t = (float)(tiles * (TILEREVOLUTIONS(MANUAL_OFFSET)) * 360.0); // Convert tiles to degrees
     float avg_position = 0;
 
     // Reset the motor positions
@@ -81,7 +80,7 @@ void driveForward(int tiles){
         avg_position = (left_position + right_position) / 2;
         double drive = PIDControl(t, avg_position); // Calculate the drive value
 
-        std::cout<<"Avg: "<<avg_position<<"target: "<<t<<std::endl;
+        // std::cout<<"Avg: "<<avg_position<<"target: "<<t<<std::endl;
 
         // Don't allow drive to go below minimum voltage (speed)
         drive = (drive < MINVOLTAGE && drive > 0) ? MINVOLTAGE : drive;
@@ -112,4 +111,3 @@ void driveForward(int tiles){
 
     return;
 }
-
